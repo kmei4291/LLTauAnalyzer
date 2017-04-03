@@ -28,6 +28,16 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "DataFormats/Math/interface/deltaR.h"
+
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/HLTReco/interface/TriggerObject.h"
+#include "DataFormats/HLTReco/interface/TriggerEvent.h"
+#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+
+#include <iostream>
 //
 // class declaration
 //
@@ -37,6 +47,9 @@
 // from  edm::one::EDAnalyzer<> and also remove the line from
 // constructor "usesResource("TFileService");"
 // This will improve performance in multithreaded jobs.
+using std::cout;
+using std::endl;
+using std::string;
 
 class LLTauAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
    public:
@@ -50,7 +63,8 @@ class LLTauAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       virtual void beginJob() override;
       virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
       virtual void endJob() override;
-
+      edm::EDGetTokenT<edm::TriggerResults> trgresultsToken_;
+      edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> trigobjectToken_;
       // ----------member data ---------------------------
 };
 
@@ -64,9 +78,10 @@ class LLTauAnalyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 
 //
 // constructors and destructor
-//
-LLTauAnalyzer::LLTauAnalyzer(const edm::ParameterSet& iConfig)
-
+//HLTriggerReults
+LLTauAnalyzer::LLTauAnalyzer(const edm::ParameterSet& cfg):
+  trgresultsToken_(consumes<edm::TriggerResults>(cfg.getParameter<edm::InputTag>("HLTriggerResults"))),
+  trigobjectToken_(consumes<pat::TriggerObjectStandAloneCollection>(cfg.getParameter<edm::InputTag>("TriggerObjectToken")))
 {
    //now do what ever initialization is needed
    usesResource("TFileService");
@@ -92,18 +107,39 @@ void
 LLTauAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
+   //Accessing trigger bits (same as AOD):
+   edm::Handle<edm::TriggerResults> trigResults;
+   iEvent.getByToken(trgresultsToken_, trigResults);
+   if( !trigResults.failedToGet() ) {
+     int N_Triggers = trigResults->size();
+     const edm::TriggerNames & trigName = iEvent.triggerNames(*trigResults);
+     std::cout<<"N_Triggers: "<<N_Triggers<<std::endl;
+     for( int i_Trig = 0; i_Trig < N_Triggers; ++i_Trig ) {
+       TString TrigPath =trigName.triggerName(i_Trig);
+       if (trigResults.product()->accept(i_Trig)) {
+	 cout << "passed path: " << TrigPath<<endl;
+       }
+       //else
+       //cout<<"failed path: " << TrigPath<<endl;	 
+     }
+   }
+   else
+     cout<<"Failed to get the trigger results!!"<<endl;
 
-
-
-#ifdef THIS_IS_AN_EVENT_EXAMPLE
-   Handle<ExampleData> pIn;
-   iEvent.getByLabel("example",pIn);
-#endif
-   
-#ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
-#endif
+   //Accessing the trigger objects
+   /*
+   edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+   iEvent.getByToken(trigobjectToken_, triggerObjects);
+   const edm::TriggerNames &names = iEvent.triggerNames(*trigResults);
+   for (pat::TriggerObjectStandAlone obj : *triggerObjects) {
+     obj.unpackPathNames(names);
+     for (unsigned h = 0; h < obj.filterLabels().size(); ++h){
+       string myfillabl=obj.filterLabels()[h];
+       cout << "trigger object name, pt, eta, phi: "
+	    << myfillabl<<", " << obj.pt()<<", "<<obj.eta()<<", "<<obj.phi() << endl;
+     }
+   }
+   */
 }
 
 

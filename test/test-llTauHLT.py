@@ -18,4 +18,4 @@ process.llTauHLT = cms.EDAnalyzer('LLTauAnalyzer'
 )
 
 
-process.p = cms.Path(process.demo)
+process.p = cms.Path(process.llTauHLT)
