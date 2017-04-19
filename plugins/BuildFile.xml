@@ -25,6 +25,7 @@
 <use name="DataFormats/Luminosity"/>
 <use name="DataFormats/PatCandidates"/>
 <use name="DataFormats/L1GlobalTrigger"/>
+<use name="DataFormats/HepMCCandidate"/>
 <use name="FWCore/MessageService"/>
 <use name="PhysicsTools/PatUtils"/>
 <use name="PhysicsTools/IsolationUtils"/>
@@ -46,8 +47,7 @@
 <use name="RecoVertex/AdaptiveVertexFit"/>
 <use name="root"/>
 <use name="L1Trigger/L1TCaloLayer1"/>
-<flags EDM_PLUGIN="1"/>
-<use name="HLTrigger/LLTauAnalyzer"/>
+<!--use name="HLTrigger/LLTauAnalyzer"/-->
 <library   file="*.cc" name="LLTauAnalyzerPlugins">
-  <flags   EDM_PLUGIN="1"/>
+	<flags   EDM_PLUGIN="1"/>
 </library>
